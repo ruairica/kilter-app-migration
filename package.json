@@ -1,0 +1,18 @@
+{
+  "name": "kilter-app-migration",
+  "module": "src/cli.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --compile --outfile dist/kilter-migrate"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.3.2"
+  }
+}
