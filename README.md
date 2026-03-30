@@ -8,17 +8,22 @@ CLI tool to migrate your logbook and playlists from the old Kilter Board app int
 - Attempts (logged but not completed)
 - Circuits (playlists of climbs)
 
-## Prerequisites
+## Usage
 
-- [Bun](https://bun.sh/) runtime
-- A JSON export file from the old Kilter Board app
-- Your Kilter Board account credentials
+Download the correct binary for your OS from the [releases page](https://github.com/ruairica/kilter-app-migration/releases), then run it with your export file:
+
+On Windows:
+```
+kilter-migrate-windows.exe "path\to\export.json"
+```
+
+The tool will prompt you to log in (your login details are not sent anywhere, they remain on your machine), pick your gym and wall (new app requires a wall for it to be logged at), then import everything it finds in the export file.
 
 ## Running from source
+
+Requires [Bun](https://bun.sh/).
 
 ```
 bun install
 bun run start <path-to-export.json>
 ```
-
-The tool will prompt you to log in (your login details are not sent anywhere, they remain on your machine), pick your gym and wall (new app requires a wall for it to be logged at), then import everything it finds in the export file.
