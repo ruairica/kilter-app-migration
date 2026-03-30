@@ -1,6 +1,6 @@
 # kilter-app-migration
 
-CLI tool to migrate your logbook and playlists from the old Kilter Board app into the new one. It takes a JSON export from the old app and imports your ascents, attempts, and circuits via the Kilter API.
+Migrate your logbook and playlists from the old Kilter Board app into the new one. It takes a JSON export from the old app and imports your ascents, attempts, and circuits via the Kilter API.
 
 ## What it imports
 
@@ -10,7 +10,15 @@ CLI tool to migrate your logbook and playlists from the old Kilter Board app int
 
 ## Usage
 
-Download the correct binary for your OS from the [releases page](https://github.com/ruairica/kilter-app-migration/releases), then run it with your export file:
+Download the correct binary for your OS from the [releases page](https://github.com/ruairica/kilter-app-migration/releases).
+
+### Web UI (recommended)
+
+Run the binary with no arguments (on Windows, just double-click it) — it will open a browser window with a step-by-step wizard that guides you through selecting your export file, logging in, picking your gym, and importing your data. No terminal required.
+
+### Command line
+
+If you prefer using the terminal, run the exe with your export file as an argument:
 
 On Windows (if your terminal is in the same directory as the exe):
 ```
@@ -22,7 +30,9 @@ On Windows (if your terminal is in the same directory as the exe):
 C:\Users\You\Downloads\kilter-migrate-windows.exe C:\Users\You\Documents\export.json
 ```
 
-The tool will prompt you to log in (your login details are not sent anywhere, they remain on your machine), pick your gym and wall (new app requires a wall for it to be logged at), then import everything it finds in the export file.
+The tool will prompt you to log in, pick your gym and wall, then import everything it finds in the export file.
+
+Your login details are sent directly to Kilter's servers and are not stored.
 
 ## Running from source
 
