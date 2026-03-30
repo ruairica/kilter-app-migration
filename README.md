@@ -10,13 +10,13 @@ Migrate your logbook and playlists from the old Kilter Board app into the new on
 
 ## Usage
 
-Download the correct binary for your OS from the [releases page](https://github.com/ruairica/kilter-app-migration/releases).
-
 ### Web UI (recommended)
 
-Run the binary with no arguments (on Windows, just double-click it) — it will open a browser window with a step-by-step wizard that guides you through selecting your export file, logging in, picking your gym, and importing your data. No terminal required.
+Run the binary/program (on Windows, just double-click it) — it will open a browser window with a step-by-step wizard that guides you through selecting your export file, logging in, picking your gym, and importing your data. No terminal required.
 
-### Command line
+Download the correct binary program for your OS from the [releases page](https://github.com/ruairica/kilter-app-migration/releases).
+
+### Command line (alternative)
 
 If you prefer using the terminal, run the exe with your export file as an argument:
 
