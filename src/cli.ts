@@ -21,16 +21,23 @@ async function main() {
   const exportPath = process.argv[2];
   if (!exportPath) {
     console.error("  Usage: kilter-migrate <export-file.json>");
-    console.error("  Tip: drag and drop your JSON file onto the terminal after the command\n");
+    console.error("  Tip: drag your JSON file onto the exe, or onto the terminal after the command\n");
+    process.exitCode = 1;
+    return;
+  }
+
+  const file = Bun.file(exportPath);
+  if (!await file.exists()) {
+    console.error(`  File not found: ${exportPath}`);
     process.exitCode = 1;
     return;
   }
 
   let exportData: ExportData;
   try {
-    exportData = await Bun.file(exportPath).json();
+    exportData = await file.json();
   } catch {
-    console.error(`  Could not read ${exportPath}. Check the file exists and is valid JSON.`);
+    console.error(`  Could not parse ${exportPath}. Check the file is valid JSON.`);
     process.exitCode = 1;
     return;
   }
