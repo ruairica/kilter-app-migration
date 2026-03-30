@@ -32,3 +32,13 @@ Requires [Bun](https://bun.sh/).
 bun install
 bun run start <path-to-export.json>
 ```
+
+## Building from source
+
+Builds standalone executables for Windows, Linux, and macOS:
+
+```
+bun run build
+```
+
+Outputs are written to `dist/`.

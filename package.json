@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --compile --outfile dist/kilter-migrate"
+    "build": "bun build src/cli.ts --compile --outfile dist/kilter-migrate-windows && bun build src/cli.ts --compile --target=bun-linux-x64 --outfile dist/kilter-migrate-linux && bun build src/cli.ts --compile --target=bun-darwin-arm64 --outfile dist/kilter-migrate-macos-arm && bun build src/cli.ts --compile --target=bun-darwin-x64 --outfile dist/kilter-migrate-macos-x64"
   },
   "devDependencies": {
     "@types/bun": "latest"
