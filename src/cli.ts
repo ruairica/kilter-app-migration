@@ -22,7 +22,8 @@ async function main() {
   if (!exportPath) {
     console.error("  Usage: kilter-migrate <export-file.json>");
     console.error("  Tip: drag and drop your JSON file onto the terminal after the command\n");
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   let exportData: ExportData;
@@ -30,7 +31,8 @@ async function main() {
     exportData = await Bun.file(exportPath).json();
   } catch {
     console.error(`  Could not read ${exportPath}. Check the file exists and is valid JSON.`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const ascentCount = exportData.ascents?.length ?? 0;
@@ -42,15 +44,15 @@ async function main() {
 
   if (ascentCount === 0 && attemptCount === 0 && circuitCount === 0) {
     console.log("  Nothing to import.");
-    process.exit(0);
+    return;
   }
 
   const username = await new Promise<string>((resolve) => {
-    process.stdout.write("  Kilter username (email): ");
+    process.stdout.write("  New app username (email): ");
     const rl = require("readline").createInterface({ input: process.stdin });
     rl.once("line", (line: string) => { rl.close(); resolve(line.trim()); });
   });
-  const pwd = await password({ message: "Kilter password:" });
+  const pwd = await password({ message: "New app password:" });
 
   let token: string;
   let userUuid: string;
@@ -60,7 +62,8 @@ async function main() {
     console.log("  Authenticated\n");
   } catch (e) {
     console.error(`  Authentication failed: ${e instanceof Error ? e.message : e}`);
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const { gyms, walls } = getGymsAndWalls();
@@ -85,7 +88,8 @@ async function main() {
   let selectedWall: Wall;
   if (gymWalls.length === 0) {
     console.error("  This gym has no registered walls. Cannot proceed.");
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   } else if (gymWalls.length === 1) {
     selectedWall = gymWalls[0];
     console.log(`  Wall: ${selectedWall.name} (layout ${selectedWall.product_layout_uuid})\n`);
@@ -124,7 +128,7 @@ async function main() {
   const proceed = await confirm({ message: "Proceed with import?" });
   if (!proceed) {
     console.log("  Cancelled.");
-    process.exit(0);
+    return;
   }
   console.log();
 
@@ -166,7 +170,6 @@ async function main() {
   }
 
   console.log("\n  Done! Check the Kilter app to see your imported data.\n");
-  process.exit(0);
 }
 
 main().catch((e) => {
