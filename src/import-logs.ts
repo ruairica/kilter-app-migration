@@ -1,6 +1,6 @@
 import { apiGet, apiPost, toISODate } from "./api.js";
 import { lookupClimb } from "./climbs.js";
-import type { ExportData, ImportResult, V2Climb } from "./types.js";
+import type { ExportData, ImportResult, SkipDetail, V2Climb } from "./types.js";
 
 const RATE_LIMIT_MS = 100;
 
@@ -31,11 +31,13 @@ export async function importAscents(
 	let imported = 0;
 	let skipped = 0;
 	let failed = 0;
+	const skipDetails: SkipDetail[] = [];
 
 	for (const ascent of ascents) {
 		const climb = lookupClimb(climbLookup, ascent.climb);
 		if (!climb) {
 			skipped++;
+			skipDetails.push({ name: ascent.climb, reason: "Climb not found" });
 			continue;
 		}
 
@@ -43,6 +45,7 @@ export async function importAscents(
 		const dedupKey = `${climb.climbUuid}:${ascent.angle}:${createdAt}`;
 		if (existingKeys.has(dedupKey)) {
 			skipped++;
+			skipDetails.push({ name: ascent.climb, reason: "Already imported" });
 			continue;
 		}
 
@@ -81,7 +84,7 @@ export async function importAscents(
 		await Bun.sleep(RATE_LIMIT_MS);
 	}
 
-	return { imported, skipped, failed };
+	return { imported, skipped, failed, skipDetails };
 }
 
 export async function importAttempts(
@@ -99,11 +102,13 @@ export async function importAttempts(
 	let imported = 0;
 	let skipped = 0;
 	let failed = 0;
+	const skipDetails: SkipDetail[] = [];
 
 	for (const attempt of attempts) {
 		const climb = lookupClimb(climbLookup, attempt.climb);
 		if (!climb) {
 			skipped++;
+			skipDetails.push({ name: attempt.climb, reason: "Climb not found" });
 			continue;
 		}
 
@@ -111,6 +116,7 @@ export async function importAttempts(
 		const dedupKey = `${climb.climbUuid}:${attempt.angle}:${createdAt}`;
 		if (existingKeys.has(dedupKey)) {
 			skipped++;
+			skipDetails.push({ name: attempt.climb, reason: "Already imported" });
 			continue;
 		}
 
@@ -140,5 +146,5 @@ export async function importAttempts(
 		await Bun.sleep(RATE_LIMIT_MS);
 	}
 
-	return { imported, skipped, failed };
+	return { imported, skipped, failed, skipDetails };
 }

@@ -1,6 +1,6 @@
 import { apiPost, toISODate } from "./api.js";
 import { lookupClimb } from "./climbs.js";
-import type { ExportData, ImportResult, V2Climb } from "./types.js";
+import type { ExportData, ImportResult, SkipDetail, V2Climb } from "./types.js";
 
 const SYNC = "https://sync1.kiltergrips.com";
 
@@ -71,15 +71,18 @@ export async function importCircuits(
 	let imported = 0;
 	let skipped = 0;
 	let failed = 0;
+	const skipDetails: SkipDetail[] = [];
 
 	for (const circuit of circuits) {
 		if (circuit.climbs.length === 0) {
 			skipped++;
+			skipDetails.push({ name: circuit.name, reason: "No climbs" });
 			continue;
 		}
 
 		if (existingNames.has(circuit.name)) {
 			skipped++;
+			skipDetails.push({ name: circuit.name, reason: "Already exists" });
 			continue;
 		}
 
@@ -124,5 +127,5 @@ export async function importCircuits(
 		onProgress?.(imported, circuits.length);
 	}
 
-	return { imported, skipped, failed };
+	return { imported, skipped, failed, skipDetails };
 }

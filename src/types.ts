@@ -54,8 +54,14 @@ export interface Wall {
 	[key: string]: unknown;
 }
 
+export interface SkipDetail {
+	name: string;
+	reason: string;
+}
+
 export interface ImportResult {
 	imported: number;
 	skipped: number;
 	failed: number;
+	skipDetails: SkipDetail[];
 }

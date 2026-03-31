@@ -86,6 +86,22 @@
   .results-table td:last-child { text-align: right; }
   .status-msg { font-size: 0.9rem; color: #666; margin-top: 8px; }
   .done-msg { font-size: 1rem; color: #27ae60; font-weight: 600; margin-top: 16px; }
+  .skip-details { margin-top: 8px; }
+  .skip-details summary {
+    font-size: 0.85rem; color: #666; cursor: pointer; user-select: none;
+  }
+  .skip-details summary:hover { color: #333; }
+  .skip-list {
+    max-height: 200px; overflow-y: auto; margin-top: 6px;
+    border: 1px solid #eee; border-radius: 6px; background: #fafafa;
+  }
+  .skip-item {
+    padding: 6px 12px; font-size: 0.83rem; border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  .skip-item:last-child { border-bottom: none; }
+  .skip-item .skip-name { color: #333; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .skip-item .skip-reason { color: #999; white-space: nowrap; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -388,8 +404,21 @@
       const name = phase.charAt(0).toUpperCase() + phase.slice(1);
       rows += "<tr><td><strong>" + name + "</strong></td><td>" +
         r.imported + " imported, " + r.skipped + " skipped, " + r.failed + " failed</td></tr>";
+      if (r.skipDetails && r.skipDetails.length > 0) {
+        rows += `<tr><td colspan="2">${renderSkipDetails(name, r.skipDetails)}</td></tr>`;
+      }
     }
     $("results-table").innerHTML = rows;
+  }
+
+  function renderSkipDetails(phase, details) {
+    const items = details.map(d =>
+      '<div class="skip-item"><span class="skip-name">' + escHtml(d.name) +
+      '</span><span class="skip-reason">' + escHtml(d.reason) + '</span></div>'
+    ).join("");
+    return '<details class="skip-details"><summary>' +
+      details.length + " skipped " + phase.toLowerCase() +
+      '</summary><div class="skip-list">' + items + '</div></details>';
   }
 
   function escHtml(s) {
