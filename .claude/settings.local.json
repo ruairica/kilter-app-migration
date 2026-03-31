@@ -6,7 +6,9 @@
       "Bash(python3 -c \":*)",
       "Bash(bun add:*)",
       "Bash(bun build:*)",
-      "Bash(bun:*)"
+      "Bash(bun:*)",
+      "WebFetch(domain:bun.com)",
+      "Bash(bunx:*)"
     ]
   }
 }
