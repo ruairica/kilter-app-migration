@@ -1,0 +1,3 @@
+{
+  "buildCommand": "cp src/gym-data.json public/gym-data.json"
+}
