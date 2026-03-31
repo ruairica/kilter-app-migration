@@ -27,10 +27,10 @@ export async function buildClimbLookup(
 ): Promise<Map<string, V2Climb>> {
 	const byName = new Map<string, V2Climb>();
 
-	const climbs = (await apiGet(
+	const climbs = await apiGet<V2Climb[]>(
 		token,
 		`/climbs/all/${primaryLayoutId}`,
-	)) as V2Climb[];
+	);
 	addClimbs(byName, climbs);
 
 	const unresolvedNames = new Set<string>();
@@ -50,10 +50,7 @@ export async function buildClimbLookup(
 			.sort((a, b) => layoutCounts.get(b)! - layoutCounts.get(a)!);
 
 		for (const layoutId of otherLayouts) {
-			const more = (await apiGet(
-				token,
-				`/climbs/all/${layoutId}`,
-			)) as V2Climb[];
+			const more = await apiGet<V2Climb[]>(token, `/climbs/all/${layoutId}`);
 			addClimbs(byName, more);
 
 			for (const name of unresolvedNames) {

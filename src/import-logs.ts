@@ -5,11 +5,13 @@ import type { ExportData, ImportResult, V2Climb } from "./types.js";
 const RATE_LIMIT_MS = 100;
 
 async function fetchExistingLogKeys(token: string): Promise<Set<string>> {
-	const logs = (await apiGet(token, "/logs")) as Array<{
-		climbUuid: string;
-		angle: number;
-		createdAt: string;
-	}>;
+	const logs = await apiGet<
+		Array<{
+			climbUuid: string;
+			angle: number;
+			createdAt: string;
+		}>
+	>(token, "/logs");
 	return new Set(logs.map((l) => `${l.climbUuid}:${l.angle}:${l.createdAt}`));
 }
 

@@ -45,11 +45,11 @@ async function parseBody(res: Response): Promise<unknown> {
 	}
 }
 
-export async function apiPost(
+export async function apiPost<T = unknown>(
 	token: string,
 	path: string,
 	body: unknown,
-): Promise<{ status: number; data: unknown }> {
+): Promise<{ status: number; data: T }> {
 	const res = await fetch(`${API}${path}`, {
 		method: "POST",
 		headers: {
@@ -59,15 +59,18 @@ export async function apiPost(
 		},
 		body: JSON.stringify(body),
 	});
-	return { status: res.status, data: await parseBody(res) };
+	return { status: res.status, data: (await parseBody(res)) as T };
 }
 
-export async function apiGet(token: string, path: string): Promise<unknown> {
+export async function apiGet<T = unknown>(
+	token: string,
+	path: string,
+): Promise<T> {
 	const res = await fetch(`${API}${path}`, {
 		method: "GET",
 		headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
 	});
-	return parseBody(res);
+	return (await parseBody(res)) as T;
 }
 
 export function toISODate(s: string): string {
