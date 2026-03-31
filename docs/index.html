@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kilter Board Migration</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f5; color: #333; min-height: 100vh;
+    display: flex; justify-content: center; padding: 40px 20px;
+  }
+  .container { max-width: 520px; width: 100%; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 32px; }
+  .step {
+    background: #fff; border-radius: 8px; padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px;
+    display: none;
+  }
+  .step.active { display: block; }
+  .step h2 { font-size: 1.1rem; margin-bottom: 16px; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #555; }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+    font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+  }
+  input:focus { border-color: #4a90d9; }
+  .file-drop {
+    border: 2px dashed #ccc; border-radius: 8px; padding: 32px;
+    text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    color: #888; font-size: 0.95rem;
+  }
+  .file-drop:hover, .file-drop.dragover { border-color: #4a90d9; background: #f0f6ff; }
+  .file-drop input { display: none; }
+  .summary-box {
+    background: #f0f6ff; border-radius: 6px; padding: 12px 16px;
+    margin-top: 12px; font-size: 0.9rem; color: #333;
+  }
+  .btn {
+    display: inline-block; padding: 10px 24px; background: #4a90d9; color: #fff;
+    border: none; border-radius: 6px; font-size: 0.95rem; cursor: pointer;
+    margin-top: 16px; transition: background 0.2s;
+  }
+  .btn:hover { background: #3a7bc8; }
+  .btn:disabled { background: #aaa; cursor: not-allowed; }
+  .error { color: #c0392b; font-size: 0.85rem; margin-top: 8px; }
+  .success { color: #27ae60; font-size: 0.85rem; margin-top: 8px; }
+  .field + .field { margin-top: 12px; }
+  .gym-results {
+    max-height: 200px; overflow-y: auto; border: 1px solid #ddd;
+    border-radius: 6px; margin-top: 8px;
+  }
+  .gym-results.hidden { display: none; }
+  .gym-item {
+    padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+  }
+  .gym-item:last-child { border-bottom: none; }
+  .gym-item:hover { background: #f0f6ff; }
+  .wall-select { margin-top: 12px; }
+  .wall-select select {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+    font-size: 0.95rem; background: #fff;
+  }
+  .selected-gym {
+    background: #e8f5e9; border-radius: 6px; padding: 10px 14px;
+    margin-top: 8px; font-size: 0.9rem; display: flex;
+    justify-content: space-between; align-items: center;
+  }
+  .selected-gym .change { color: #4a90d9; cursor: pointer; font-size: 0.85rem; }
+  .progress-section { margin-top: 12px; }
+  .progress-phase { margin-bottom: 12px; }
+  .progress-label { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+  .progress-bar-bg {
+    background: #eee; border-radius: 4px; height: 8px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: #4a90d9; height: 100%; border-radius: 4px;
+    transition: width 0.3s;
+  }
+  .progress-text { font-size: 0.8rem; color: #666; margin-top: 2px; }
+  .results-table { width: 100%; font-size: 0.9rem; margin-top: 12px; }
+  .results-table td { padding: 6px 0; }
+  .results-table td:last-child { text-align: right; }
+  .status-msg { font-size: 0.9rem; color: #666; margin-top: 8px; }
+  .done-msg { font-size: 1rem; color: #27ae60; font-weight: 600; margin-top: 16px; }
+  .skip-details { margin-top: 8px; }
+  .skip-details summary {
+    font-size: 0.85rem; color: #666; cursor: pointer; user-select: none;
+  }
+  .skip-details summary:hover { color: #333; }
+  .skip-list {
+    max-height: 200px; overflow-y: auto; margin-top: 6px;
+    border: 1px solid #eee; border-radius: 6px; background: #fafafa;
+  }
+  .skip-item {
+    padding: 6px 12px; font-size: 0.83rem; border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; gap: 12px;
+  }
+  .skip-item:last-child { border-bottom: none; }
+  .skip-item .skip-name { color: #333; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .skip-item .skip-reason { color: #999; white-space: nowrap; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Kilter Board Migration</h1>
+  <p class="subtitle">Import your logbook and playlists from the old app &mdash; runs entirely in your browser</p>
+
+  <!-- Step 1: File Upload -->
+  <div class="step active" id="step-file">
+    <h2>1. Select your export file</h2>
+    <div class="file-drop" id="file-drop">
+      <p>Click to select or drag and drop your JSON file</p>
+      <input type="file" id="file-input" accept=".json">
+    </div>
+    <div id="file-summary"></div>
+    <div class="error" id="file-error"></div>
+    <button type="button" class="btn" id="file-next" disabled>Next</button>
+  </div>
+
+  <!-- Step 2: Login -->
+  <div class="step" id="step-login">
+    <h2>2. Log in to your new Kilter account</h2>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:16px">Your credentials are sent directly to Kilter's servers and are not stored.</p>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Password">
+    </div>
+    <div class="error" id="login-error"></div>
+    <div class="success" id="login-success"></div>
+    <button type="button" class="btn" id="login-btn">Sign In</button>
+  </div>
+
+  <!-- Step 3: Gym & Wall -->
+  <div class="step" id="step-gym">
+    <h2>3. Select your gym and wall</h2>
+    <div class="field">
+      <label for="gym-search">Search for your gym</label>
+      <input type="text" id="gym-search" placeholder="Start typing...">
+    </div>
+    <div class="gym-results hidden" id="gym-results"></div>
+    <div id="gym-selected"></div>
+    <div class="wall-select" id="wall-section" style="display:none">
+      <label for="wall-select">Select your wall</label>
+      <select id="wall-select"></select>
+    </div>
+    <div class="error" id="gym-error"></div>
+    <button type="button" class="btn" id="gym-next" disabled>Next</button>
+  </div>
+
+  <!-- Step 4: Confirm & Import -->
+  <div class="step" id="step-import">
+    <h2>4. Confirm and import</h2>
+    <div class="summary-box" id="import-summary"></div>
+    <button type="button" class="btn" id="import-btn">Start Import</button>
+    <div class="progress-section" id="progress-section" style="display:none">
+      <div class="status-msg" id="status-msg"></div>
+      <div id="progress-bars"></div>
+    </div>
+    <div id="results-section" style="display:none">
+      <div class="done-msg">Import complete!</div>
+      <table class="results-table" id="results-table"></table>
+      <p style="font-size:0.85rem;color:#666;margin-top:12px">Check the Kilter app to see your imported data.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Constants ────────────────────────────────────────────────────────────────
+  const IDP  = "https://idp.kiltergrips.com";
+  const API  = "https://portal.kiltergrips.com/api";
+  const SYNC = "https://sync1.kiltergrips.com";
+
+  // ── State ────────────────────────────────────────────────────────────────────
+  const state = {
+    exportData: null,
+    fileSummary: null,
+    gymData: null,   // { gyms, walls } loaded from gym-data.json
+    token: null,
+    userUuid: null,
+    gym: null,
+    wall: null,
+    walls: [],
+  };
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function $(id) { return document.getElementById(id); }
+  function show(id) { $(id).classList.add("active"); }
+  function hide(id) { $(id).classList.remove("active"); }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function escHtml(s) {
+    const d = document.createElement("div");
+    d.textContent = String(s ?? "");
+    return d.innerHTML;
+  }
+
+  // ── Kilter Auth ──────────────────────────────────────────────────────────────
+  async function getToken(username, password) {
+    const res = await fetch(`${IDP}/realms/kilter/protocol/openid-connect/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "password",
+        client_id: "kilter",
+        scope: "openid offline_access",
+        username,
+        password,
+      }),
+    });
+    if (!res.ok) throw new Error(`Auth failed: ${res.status} ${await res.text()}`);
+    return (await res.json()).access_token;
+  }
+
+  function getUserUuid(token) {
+    const parts = token.split(".");
+    if (parts.length < 2) throw new Error("Invalid token format");
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.sub) throw new Error("Token missing user ID");
+    return payload.sub;
+  }
+
+  // ── Kilter API ───────────────────────────────────────────────────────────────
+  async function apiPost(token, path, body) {
+    const res = await fetch(`${API}${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    let data;
+    try { data = await res.json(); } catch { data = null; }
+    return { status: res.status, data };
+  }
+
+  async function apiGet(token, path) {
+    const res = await fetch(`${API}${path}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    });
+    try { return await res.json(); } catch { return null; }
+  }
+
+  function toISODate(s) {
+    return `${s.replace(" ", "T")}Z`;
+  }
+
+  // ── Climb name normalisation ─────────────────────────────────────────────────
+  function normalizeQuotes(s) {
+    return s
+      .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+      .replace(/\u2026/g, "...")
+      .replace(/[\u2013\u2014]/g, "-");
+  }
+
+  function addClimbs(byName, climbs) {
+    for (const c of (climbs || [])) {
+      if (!byName.has(c.name)) byName.set(c.name, c);
+      const normalized = normalizeQuotes(c.name);
+      if (normalized !== c.name && !byName.has(normalized)) byName.set(normalized, c);
+    }
+  }
+
+  function lookupClimb(climbLookup, name) {
+    return climbLookup.get(name) ?? climbLookup.get(normalizeQuotes(name));
+  }
+
+  async function buildClimbLookup(token, primaryLayoutId, allWalls, neededNames) {
+    const byName = new Map();
+    addClimbs(byName, await apiGet(token, `/climbs/all/${primaryLayoutId}`));
+
+    const unresolvedNames = new Set();
+    for (const name of neededNames) {
+      if (!lookupClimb(byName, name)) unresolvedNames.add(name);
+    }
+
+    if (unresolvedNames.size > 0) {
+      const layoutCounts = new Map();
+      for (const w of allWalls) {
+        const l = String(w.product_layout_uuid);
+        layoutCounts.set(l, (layoutCounts.get(l) ?? 0) + 1);
+      }
+      const otherLayouts = [...layoutCounts.keys()]
+        .filter(l => l !== primaryLayoutId)
+        .sort((a, b) => layoutCounts.get(b) - layoutCounts.get(a));
+
+      for (const layoutId of otherLayouts) {
+        addClimbs(byName, await apiGet(token, `/climbs/all/${layoutId}`));
+        for (const name of unresolvedNames) {
+          if (lookupClimb(byName, name)) unresolvedNames.delete(name);
+        }
+        if (unresolvedNames.size === 0) break;
+      }
+    }
+    return byName;
+  }
+
+  async function buildGradeMap(token) {
+    const grades = await apiGet(token, "/grades") || [];
+    const map = new Map();
+    for (const g of grades) map.set(g.fontScale.toLowerCase(), g.difficultyGradeId);
+    return map;
+  }
+
+  // ── Import: ascents ──────────────────────────────────────────────────────────
+  async function fetchExistingLogKeys(token) {
+    const logs = await apiGet(token, "/logs") || [];
+    return new Set(logs.map(l => `${l.climbUuid}:${l.angle}:${l.createdAt}`));
+  }
+
+  async function importAscents(token, userUuid, gymUuid, wallUuid, layoutId, ascents, climbLookup, gradeMap, onProgress) {
+    const existingKeys = await fetchExistingLogKeys(token);
+    let imported = 0, skipped = 0, failed = 0;
+    const skipDetails = [];
+
+    for (const ascent of ascents) {
+      const climb = lookupClimb(climbLookup, ascent.climb);
+      if (!climb) { skipped++; skipDetails.push({ name: ascent.climb, reason: "Climb not found" }); continue; }
+
+      const createdAt = toISODate(ascent.created_at);
+      const dedupKey = `${climb.climbUuid}:${ascent.angle}:${createdAt}`;
+      if (existingKeys.has(dedupKey)) { skipped++; skipDetails.push({ name: ascent.climb, reason: "Already imported" }); continue; }
+
+      const r = await apiPost(token, "/logs", {
+        logUuid: crypto.randomUUID(),
+        climbUuid: climb.climbUuid,
+        userUuid, gymUuid, wallUuid,
+        productLayoutUuid: layoutId,
+        angle: ascent.angle,
+        isMirror: false, topped: true, flashed: false,
+        attempts: ascent.count, bidCount: 0, createdAt,
+      });
+
+      if (r.status === 200) {
+        const difficultyId = gradeMap.get(ascent.grade.toLowerCase());
+        if (difficultyId) {
+          await apiPost(token, "/climb-rating", {
+            climbUuid: climb.climbUuid,
+            difficulty: difficultyId,
+            quality: ascent.stars,
+            angle: ascent.angle,
+          });
+        }
+        imported++;
+        onProgress?.(imported, ascents.length);
+      } else { failed++; }
+
+      await sleep(100);
+    }
+    return { imported, skipped, failed, skipDetails };
+  }
+
+  // ── Import: attempts ─────────────────────────────────────────────────────────
+  async function importAttempts(token, userUuid, gymUuid, wallUuid, layoutId, attempts, climbLookup, onProgress) {
+    const existingKeys = await fetchExistingLogKeys(token);
+    let imported = 0, skipped = 0, failed = 0;
+    const skipDetails = [];
+
+    for (const attempt of attempts) {
+      const climb = lookupClimb(climbLookup, attempt.climb);
+      if (!climb) { skipped++; skipDetails.push({ name: attempt.climb, reason: "Climb not found" }); continue; }
+
+      const createdAt = toISODate(attempt.created_at);
+      const dedupKey = `${climb.climbUuid}:${attempt.angle}:${createdAt}`;
+      if (existingKeys.has(dedupKey)) { skipped++; skipDetails.push({ name: attempt.climb, reason: "Already imported" }); continue; }
+
+      const r = await apiPost(token, "/logs", {
+        logUuid: crypto.randomUUID(),
+        climbUuid: climb.climbUuid,
+        userUuid, gymUuid, wallUuid,
+        productLayoutUuid: layoutId,
+        angle: attempt.angle,
+        isMirror: false, topped: false, flashed: false,
+        attempts: attempt.count, bidCount: attempt.count, createdAt,
+      });
+
+      if (r.status === 200) { imported++; onProgress?.(imported, attempts.length); } else { failed++; }
+      await sleep(100);
+    }
+    return { imported, skipped, failed, skipDetails };
+  }
+
+  // ── Import: circuits ─────────────────────────────────────────────────────────
+  async function fetchExistingCircuitNames(token, userUuid) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+      const res = await fetch(`${SYNC}/sync/stream`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ buckets: [{ name: `user_buckets["${userUuid}"]`, after: "0" }] }),
+        signal: controller.signal,
+      });
+      const reader = res.body?.getReader();
+      const names = new Set();
+      if (!reader) return names;
+      let fullText = "";
+      const decoder = new TextDecoder();
+      while (fullText.length < 500000) {
+        const { done, value } = await reader.read().catch(() => ({ done: true, value: undefined }));
+        if (done || !value) break;
+        fullText += decoder.decode(value, { stream: true });
+      }
+      reader.cancel().catch(() => {});
+      clearTimeout(timeout);
+      for (const line of fullText.split("\n").filter(Boolean)) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj.data?.data && Array.isArray(obj.data.data)) {
+            for (const item of obj.data.data) {
+              if (item.object_type === "circuits") {
+                const d = typeof item.data === "string" ? JSON.parse(item.data) : item.data;
+                if (d?.name) names.add(d.name);
+              }
+            }
+          }
+        } catch {}
+      }
+      return names;
+    } catch {
+      // CORS or network issue — return empty set; duplicate circuits will just fail gracefully
+      return new Set();
+    }
+  }
+
+  async function importCircuits(token, userUuid, creatorName, layoutId, circuits, climbLookup, onProgress) {
+    const existingNames = await fetchExistingCircuitNames(token, userUuid);
+    let imported = 0, skipped = 0, failed = 0;
+    const skipDetails = [];
+
+    for (const circuit of circuits) {
+      if (circuit.climbs.length === 0) { skipped++; skipDetails.push({ name: circuit.name, reason: "No climbs" }); continue; }
+      if (existingNames.has(circuit.name)) { skipped++; skipDetails.push({ name: circuit.name, reason: "Already exists" }); continue; }
+
+      const circuitUuid = crypto.randomUUID();
+      const createdAt = toISODate(circuit.created_at);
+      const r = await apiPost(token, "/circuits", {
+        circuitUuid, name: circuit.name, description: "",
+        color: circuit.color, isPrivate: circuit.is_private ?? false,
+        userUuid, creatorName, productLayoutUuid: layoutId, createdAt, updatedAt: createdAt,
+      });
+
+      if (r.status !== 200) { failed++; continue; }
+
+      for (let i = 0; i < circuit.climbs.length; i++) {
+        const climb = lookupClimb(climbLookup, circuit.climbs[i]);
+        if (!climb) continue;
+        await apiPost(token, "/circuit-climbs", { circuitUuid, climbUuid: climb.climbUuid, sortOrder: i });
+        await sleep(50);
+      }
+      imported++;
+      onProgress?.(imported, circuits.length);
+    }
+    return { imported, skipped, failed, skipDetails };
+  }
+
+  // ── Gym data (loaded once after login) ───────────────────────────────────────
+  async function loadGymData() {
+    const res = await fetch("gym-data.json");
+    if (!res.ok) throw new Error("Could not load gym data");
+    return await res.json();
+  }
+
+  function searchGyms(gyms, query) {
+    const q = query.toLowerCase();
+    return gyms.filter(g =>
+      String(g.name ?? "").toLowerCase().includes(q) ||
+      String(g.city ?? "").toLowerCase().includes(q) ||
+      String(g.country ?? "").toLowerCase().includes(q)
+    );
+  }
+
+  // ── Step 1: File Upload ───────────────────────────────────────────────────────
+  const fileDrop = $("file-drop");
+  const fileInput = $("file-input");
+
+  fileDrop.addEventListener("click", () => fileInput.click());
+  fileDrop.addEventListener("dragover", e => { e.preventDefault(); fileDrop.classList.add("dragover"); });
+  fileDrop.addEventListener("dragleave", () => fileDrop.classList.remove("dragover"));
+  fileDrop.addEventListener("drop", e => {
+    e.preventDefault();
+    fileDrop.classList.remove("dragover");
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+  async function handleFile(file) {
+    $("file-error").textContent = "";
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.ascents && !data.attempts && !data.circuits) {
+        throw new Error("This doesn't look like a Kilter export file");
+      }
+      state.exportData = data;
+      state.fileSummary = {
+        ascents: data.ascents?.length ?? 0,
+        attempts: data.attempts?.length ?? 0,
+        circuits: data.circuits?.length ?? 0,
+        circuitClimbs: data.circuits?.reduce((s, c) => s + c.climbs.length, 0) ?? 0,
+      };
+      fileDrop.innerHTML = `<p>${escHtml(file.name)}</p>`;
+      $("file-summary").innerHTML =
+        '<div class="summary-box">' +
+        state.fileSummary.ascents + " ascents, " +
+        state.fileSummary.attempts + " attempts, " +
+        state.fileSummary.circuits + " circuits (" +
+        state.fileSummary.circuitClimbs + " climbs)</div>";
+      $("file-next").disabled = false;
+    } catch (e) {
+      $("file-error").textContent = e.message || "Could not read file";
+    }
+  }
+
+  $("file-next").addEventListener("click", () => { hide("step-file"); show("step-login"); });
+
+  // ── Step 2: Login ─────────────────────────────────────────────────────────────
+  $("login-btn").addEventListener("click", async () => {
+    const email = $("email").value.trim();
+    const pwd = $("password").value;
+    if (!email || !pwd) return;
+    $("login-error").textContent = "";
+    $("login-success").textContent = "";
+    $("login-btn").disabled = true;
+    $("login-btn").textContent = "Signing in...";
+    try {
+      state.token = await getToken(email, pwd);
+      state.userUuid = getUserUuid(state.token);
+      $("login-success").textContent = "Loading gym data...";
+      state.gymData = await loadGymData();
+      $("login-success").textContent = `Authenticated (${state.gymData.gyms.length} gyms loaded)`;
+      setTimeout(() => { hide("step-login"); show("step-gym"); renderGymList(""); }, 500);
+    } catch (e) {
+      const msg = e.message || "Login failed";
+      const isCors = msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror");
+      $("login-error").textContent = isCors
+        ? "Could not reach Kilter's servers. If you see a CORS error in the browser console, Kilter's API does not allow direct browser access — please use the desktop app version instead."
+        : msg;
+    } finally {
+      $("login-btn").disabled = false;
+      $("login-btn").textContent = "Sign In";
+    }
+  });
+
+  $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("login-btn").click(); });
+
+  // ── Step 3: Gym & Wall ────────────────────────────────────────────────────────
+  let searchTimeout;
+  $("gym-search").addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => renderGymList($("gym-search").value.trim()), 200);
+  });
+
+  let lastGymResults = [];
+  function renderGymList(query) {
+    const gyms = state.gymData.gyms;
+    lastGymResults = query ? searchGyms(gyms, query) : gyms.slice(0, 20);
+    const container = $("gym-results");
+    if (lastGymResults.length === 0) { container.classList.add("hidden"); return; }
+    container.innerHTML = lastGymResults.map((g, i) =>
+      '<div class="gym-item" data-index="' + i + '">' +
+      escHtml(g.name) + ' <span style="color:#999">(' + escHtml(g.city) + ', ' + escHtml(g.country) + ')</span></div>'
+    ).join("");
+    container.classList.remove("hidden");
+    container.querySelectorAll(".gym-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const g = lastGymResults[parseInt(el.dataset.index, 10)];
+        selectGym(g.gym_uuid, g.name);
+      });
+    });
+  }
+
+  function selectGym(uuid, name) {
+    state.gym = { uuid, name };
+    $("gym-results").classList.add("hidden");
+    $("gym-search").style.display = "none";
+    $("gym-selected").innerHTML =
+      `<div class="selected-gym"><span>${escHtml(name)}</span><span class="change" id="change-gym">Change</span></div>`;
+    $("change-gym").addEventListener("click", () => {
+      state.gym = null; state.wall = null;
+      $("gym-selected").innerHTML = "";
+      $("gym-search").style.display = "";
+      $("gym-search").value = "";
+      $("wall-section").style.display = "none";
+      $("gym-next").disabled = true;
+      renderGymList("");
+    });
+
+    state.walls = state.gymData.walls.filter(w => String(w.gym_uuid) === uuid);
+
+    if (state.walls.length === 0) {
+      $("gym-error").textContent = "This gym has no registered walls.";
+      $("gym-next").disabled = true;
+      return;
+    }
+
+    $("gym-error").textContent = "";
+    $("wall-section").style.display = "block";
+    $("wall-select").innerHTML = state.walls.map((w, i) =>
+      `<option value="${i}">${escHtml(w.name)} (layout ${w.product_layout_uuid})</option>`
+    ).join("");
+    state.wall = state.walls[0];
+    $("gym-next").disabled = false;
+  }
+
+  $("wall-select").addEventListener("change", () => {
+    state.wall = state.walls[parseInt($("wall-select").value, 10)];
+  });
+
+  $("gym-next").addEventListener("click", () => {
+    hide("step-gym");
+    show("step-import");
+    $("import-summary").innerHTML =
+      "<strong>Import " + state.fileSummary.ascents + " ascents, " +
+      state.fileSummary.attempts + " attempts, " +
+      state.fileSummary.circuits + " circuits</strong><br>" +
+      "to " + escHtml(state.gym.name) + " &mdash; " + escHtml(state.wall.name) +
+      " (layout " + state.wall.product_layout_uuid + ")";
+  });
+
+  // ── Step 4: Import ────────────────────────────────────────────────────────────
+  $("import-btn").addEventListener("click", async () => {
+    $("import-btn").disabled = true;
+    $("import-btn").style.display = "none";
+    $("progress-section").style.display = "block";
+    $("status-msg").textContent = "Loading climbs and grades...";
+
+    try {
+      const { exportData, token, userUuid, gym, wall, gymData } = state;
+      const layoutId = String(wall.product_layout_uuid);
+
+      const neededNames = new Set();
+      for (const a of exportData.ascents || []) neededNames.add(a.climb);
+      for (const a of exportData.attempts || []) neededNames.add(a.climb);
+      for (const c of exportData.circuits || []) for (const n of c.climbs) neededNames.add(n);
+
+      const [climbLookup, gradeMap] = await Promise.all([
+        buildClimbLookup(token, layoutId, gymData.walls, neededNames),
+        buildGradeMap(token),
+      ]);
+
+      $("status-msg").textContent = `${climbLookup.size} climbs loaded`;
+
+      const results = {};
+
+      if (exportData.ascents?.length > 0) {
+        updateProgress("ascents", 0, exportData.ascents.length);
+        results.ascents = await importAscents(
+          token, userUuid, gym.uuid, wall.wall_uuid, layoutId,
+          exportData.ascents, climbLookup, gradeMap,
+          (n, total) => updateProgress("ascents", n, total)
+        );
+      }
+
+      if (exportData.attempts?.length > 0) {
+        updateProgress("attempts", 0, exportData.attempts.length);
+        results.attempts = await importAttempts(
+          token, userUuid, gym.uuid, wall.wall_uuid, layoutId,
+          exportData.attempts, climbLookup,
+          (n, total) => updateProgress("attempts", n, total)
+        );
+      }
+
+      if (exportData.circuits?.length > 0) {
+        updateProgress("circuits", 0, exportData.circuits.length);
+        const creatorName = exportData.user?.username ?? "Unknown";
+        results.circuits = await importCircuits(
+          token, userUuid, creatorName, layoutId,
+          exportData.circuits, climbLookup,
+          (n, total) => updateProgress("circuits", n, total)
+        );
+      }
+
+      $("status-msg").textContent = "";
+      $("progress-section").style.display = "none";
+      $("results-section").style.display = "block";
+      showResults(results);
+    } catch (e) {
+      $("status-msg").textContent = `Error: ${e.message}`;
+      $("status-msg").style.color = "#c0392b";
+    }
+  });
+
+  function updateProgress(phase, current, total) {
+    let bar = $(`bar-${phase}`);
+    if (!bar) {
+      $("progress-bars").insertAdjacentHTML("beforeend",
+        '<div class="progress-phase" id="bar-' + phase + '">' +
+        '<div class="progress-label">' + phase.charAt(0).toUpperCase() + phase.slice(1) + '</div>' +
+        '<div class="progress-bar-bg"><div class="progress-bar-fill" id="fill-' + phase + '"></div></div>' +
+        '<div class="progress-text" id="text-' + phase + '"></div></div>'
+      );
+    }
+    const pct = total > 0 ? (current / total * 100) : 0;
+    $(`fill-${phase}`).style.width = `${pct}%`;
+    $(`text-${phase}`).textContent = `${current} / ${total}`;
+  }
+
+  function showResults(results) {
+    let rows = "";
+    for (const [phase, r] of Object.entries(results)) {
+      const name = phase.charAt(0).toUpperCase() + phase.slice(1);
+      rows += "<tr><td><strong>" + name + "</strong></td><td>" +
+        r.imported + " imported, " + r.skipped + " skipped, " + r.failed + " failed</td></tr>";
+      if (r.skipDetails?.length > 0) {
+        rows += `<tr><td colspan="2">${renderSkipDetails(name, r.skipDetails)}</td></tr>`;
+      }
+    }
+    $("results-table").innerHTML = rows;
+  }
+
+  function renderSkipDetails(phase, details) {
+    const items = details.map(d =>
+      '<div class="skip-item"><span class="skip-name">' + escHtml(d.name) +
+      '</span><span class="skip-reason">' + escHtml(d.reason) + '</span></div>'
+    ).join("");
+    return '<details class="skip-details"><summary>' +
+      details.length + " skipped " + phase.toLowerCase() +
+      '</summary><div class="skip-list">' + items + '</div></details>';
+  }
+</script>
+</body>
+</html>
